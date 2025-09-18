@@ -1,0 +1,33 @@
+train:
+  batch_size: 32
+  num_epochs: 200
+  learning_rate: 0.00002
+  weight_decay: 0.01
+  early_stopping: True
+  early_stopping_patience: 20
+  cross_validation: False
+  local_training: True
+  cross_validation_folds: 5
+  learning_paradigm: 'll'
+  cvd: 5
+  augment: True
+#  augment: False
+
+model:
+  pooling: 'mean' # 'mean', 'cls'
+#  pooling: 'gatedattn'
+  n_layers: 1
+  dropout: 0.3
+  hidden_size: 768
+  intermediate_size: 3072
+  n_heads: 12
+  num_classes: 1
+  hidden_mlp_size: 256
+  textual_model: 'distil'
+  audio_model: 'wav2vec2'
+  pauses: True
+#  pauses: False
+  fusion: 'gated_cross_attention'
+#  single_modal: text
+#  single_modal: audio
+model_name: ''

@@ -1,0 +1,60 @@
+train:
+  batch_size: 64
+  # bs16
+  # lr 5e-5:87.88   2e-5:88.49   1e-5:86.06
+  num_epochs: 80
+  learning_rate: 0.00005
+  # 2e-4:88.49      1e-4:88.49      5e-5:89.70    2e-5:89.09    1e-5:89.09
+  # 0.8778	0.8788	0.9088	0.9091	1.0000	1.0000	0.8485	0.8485	0.8462	0.8485	0.8963	0.8970
+  weight_decay: 0.01
+  early_stopping: True
+  early_stopping_patience: 20
+  cross_validation: False
+  local_training: True
+  cross_validation_folds: 0
+  learning_paradigm: 'fl'
+  cvd: 5
+  strategy: 'fedavg'
+#  strategy: 'fedadam'
+#  strategy: 'fedadagrad'
+#  strategy: 'fedyogi'
+#  strategy: 'fedprox'
+  augment: True
+#  augment: False
+
+model:
+  pooling: 'attn' # 'mean', 'cls', 'gatedattn', 'attn'
+#  pooling: 'cls'
+#  pooling: 'gatedattn'
+#  pooling: 'attn'
+  n_layers: 1
+  dropout: 0.3
+  # 0.1:88.49   0.2:87.88   0.25:89.09    0.3:89.70   0.35:89.70   0.4:88.49
+  hidden_size: 768
+  intermediate_size: 3072
+#  intermediate_size: 2304
+  # 768：86.06   1536：89.09    2048：86.67    2304：89.09   3840：87.88   4096：87.27
+  n_heads: 12
+#  n_heads: 16
+  # 6：88.49   8：88.49   16:88.49
+  num_classes: 1
+  hidden_mlp_size: 256
+#  hidden_mlp_size: 512
+  # 改成128性能也下降，为87.27；改成384性能下降，为88.49；改成512，性能为87.88
+  textual_model: 'distil'
+#  textual_model: 'roberta'
+#  textual_model: 'stella'
+#  textual_model: 'biobert'
+#  textual_model: 'tinybert'
+
+  audio_model: 'wav2vec2'
+#  audio_model: 'hubert'
+  pauses: True
+#  pauses: False
+  fusion: 'gated_cross_attention'
+#  fusion: 'cross'
+
+#  single_modal: text
+#  single_modal: audio
+
+model_name: ''
