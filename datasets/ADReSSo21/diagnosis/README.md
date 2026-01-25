@@ -24,4 +24,4 @@ CSV format. These files are for those who choose to do the segmented
 prediction sub-task. The segmented prediction and speech-only
 sub-tasks will be assessed separately.
 
-**Please note that the original dataset can only be obtained by applying on its hosting platform (https://talkbank.org/dementia/ADReSSo-2021/index.html). Here, we only provide the augmented data generated using voice conversion**
+**Please note that the original dataset can only be obtained by applying on its hosting platform (https://talkbank.org/dementia/ADReSSo-2021/index.html). Here, we only provide the augmented data generated using voice conversion，and the code related to voice conversion will be published after our acceptance of another journal paper**
