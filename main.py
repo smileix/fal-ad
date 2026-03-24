@@ -147,6 +147,28 @@ def cl_main(config):
         wandb.finish()
 
 
+def _terminate_processes(procs_and_files, server_proc, server_log_file):
+    """Terminate all subprocesses and close log files gracefully."""
+    for proc, out_file in procs_and_files:
+        if proc.poll() is None:
+            proc.terminate()
+        try:
+            out_file.close()
+        except OSError:
+            pass
+    if server_proc is not None and server_proc.poll() is None:
+        server_proc.terminate()
+        try:
+            server_proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            server_proc.kill()
+    if server_log_file is not None:
+        try:
+            server_log_file.close()
+        except OSError:
+            pass
+
+
 def fl_main(config_path, config, num_folds=5):
     # 参数可自定义
     NUM_CLIENTS = 3
@@ -170,27 +192,38 @@ def fl_main(config_path, config, num_folds=5):
         server_proc = subprocess.Popen(server_cmd, stdout=server_log_file, stderr=server_log_file)
         print(f"Started Flower server for fold {fold}.")
 
-        time.sleep(2)
+        # Wait for server to be ready before starting clients
+        time.sleep(5)
 
         client_procs = []
-        for cid in range(NUM_CLIENTS):
-            env = os.environ.copy()
-            cvd = config.train.cvd if config.train.cvd else 0
-            env["CUDA_VISIBLE_DEVICES"] = str(cid % torch.cuda.device_count() + cvd)
+        try:
+            for cid in range(NUM_CLIENTS):
+                env = os.environ.copy()
+                cvd = config.train.cvd if config.train.cvd else 0
+                env["CUDA_VISIBLE_DEVICES"] = str(cid % torch.cuda.device_count() + cvd)
 
-            cmd = [x.replace('{cid}', str(cid)).replace('{fold}', str(fold)) for x in CLIENT_CMD_TEMPLATE]
-            log_file_path = f"{log_path_client}/fold_{fold}_client_{cid}.log"
-            out_file = open(log_file_path, "w")
-            proc = subprocess.Popen(cmd, env=env, stdout=out_file, stderr=STDOUT)
-            client_procs.append((proc, out_file))
-            print(f"Started client {cid} for fold {fold}.")
+                cmd = [x.replace('{cid}', str(cid)).replace('{fold}', str(fold)) for x in CLIENT_CMD_TEMPLATE]
+                log_file_path = f"{log_path_client}/fold_{fold}_client_{cid}.log"
+                out_file = open(log_file_path, "w")
+                proc = subprocess.Popen(cmd, env=env, stdout=out_file, stderr=STDOUT)
+                client_procs.append((proc, out_file))
+                print(f"Started client {cid} for fold {fold}.")
 
-        for proc, out_file in client_procs:
-            proc.wait()
-            out_file.close()
+            for proc, out_file in client_procs:
+                proc.wait()
+                out_file.close()
 
-        server_log_file.close()
-        server_proc.wait()
+            server_log_file.close()
+            server_proc.wait()
+
+        except KeyboardInterrupt:
+            print(f"\n[Interrupted] Terminating all processes for fold {fold}...")
+            _terminate_processes(client_procs, server_proc, server_log_file)
+            raise
+        except Exception as e:
+            print(f"\n[Error] Exception during fold {fold}: {e}. Terminating all processes...")
+            _terminate_processes(client_procs, server_proc, server_log_file)
+            raise
 
         print(f"Fold {fold} FL processes finished!")
 
