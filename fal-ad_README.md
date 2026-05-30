@@ -26,14 +26,32 @@ The framework supports **three learning paradigms**:
 
 ## 🏗️ Architecture
 
-### Audio Backbone
-- **ResNet Audio Encoder**: ResNet-based CNN extracting Mel spectrogram features, producing audio embeddings
+### Multimodal Encoder
 
-### Multimodal Fusion
-- **Cross-Attention Encoder**: Unidirectional cross-attention from audio → text (using EGEMAPS acoustic features as text proxies)
-- **Gated Cross-Attention Fusion**: Gated mechanism controlling cross-modal information flow
-- **Element-Wise Fusion**: Element-wise multiplication with learnable gating for audio-text fusion
-- **Bidirectional Cross-Attention Transformer**: Full bidirectional attention across both modalities
+The framework jointly encodes speech and text through a dual-encoder architecture:
+
+| Modality | Backbone | Details |
+|----------|----------|---------|
+| **Text** | DistilBERT | Pre-trained `distilbert-base-uncased` Transformer encoder |
+| **Audio** | wav2vec 2.0 | Pre-trained `facebook/wav2vec2-base` — raw waveform → contextualized 768-dim embeddings |
+
+The Mel spectrogram (with pause features when `pauses: True`) is fed directly into wav2vec 2.0 as the frontend feature extractor; no hand-crafted feature engineering is applied.
+
+### Cross-Attention Fusion Module
+
+The core fusion module is **`GatedCrossAttentionFusion`**, integrated inside `CrossAttentionTransformerEncoder`:
+
+1. **Pre-Norm Cross-Attention** — Audio queries the text key-value bank (unidirectional, audio → text), enabling the audio representation to selectively attend to linguistically relevant regions
+2. **Gated Residual Connection** — A learnable gate (`σ(W·[x; attn(x)]))`) modulates how much cross-modal information flows into the residual, preventing attention noise from dominating
+3. **Feed-Forward MLP** — Standard post-norm FFN with ReLU activation
+
+```
+Audio (query) ──► Cross-Attention ◄── Text (key/value)
+                          │
+                    gated residual ← GatedCrossAttentionFusion
+                          │
+                    Feed-Forward ML
+```
 
 ### Federated Learning
 - Built on **Flower** (`flwr`) for robust federated orchestration
@@ -47,7 +65,7 @@ The framework supports **three learning paradigms**:
 ```
 fal-ad/
 ├── main.py         # Entry point — supports cl / ll / fl modes
-├── model.py        # Model definitions (ResNet, Cross-Attention, Fusion modules)
+├── model.py        # Model definitions (GatedCrossAttentionFusion, CrossAttentionTransformerEncoder, pooling)
 ├── server.py       # Flower server — strategy selection & metrics logging
 ├── client.py       # Flower client — local training & evaluation
 ├── dataset.py      # ADReSSo21 dataset loader with CV and federated splits
@@ -171,16 +189,16 @@ Key configuration parameters in YAML config files:
 
 ## 🧠 Model Variants
 
-The framework implements **multiple fusion strategies** selectable via config:
+The code contains several experimental fusion modules, but the **paper uses `CrossAttentionTransformerEncoder`** with `GatedCrossAttentionFusion` throughout:
 
-| Model Class | Description | Best For |
-|-------------|-------------|----------|
-| `CrossAttentionTransformerEncoder` | Unidirectional audio→text cross-attention | Asymmetric fusion |
-| `BidirectionalCrossAttentionTransformerEncoder` | Bidirectional cross-attention | Full cross-modal interaction |
-| `ElementWiseFusionEncoder` | Element-wise gated fusion | Memory-efficient fusion |
-| `GatedCrossAttentionFusion` | Gated cross-attention with residual | Controlled information flow |
-
-All models share the same ResNet audio backbone and share a common transformer encoder interface.
+| Model Class | Status | Description |
+|-------------|--------|-------------|
+| `CrossAttentionTransformerEncoder` | ✅ **Paper** | Unidirectional cross-attention + gated residual (audio → text) |
+| `GatedCrossAttentionFusion` | ✅ **Paper** | Gated cross-attention layer used inside above |
+| `AttnPooling` / `GatedAttnPooling` | ✅ **Paper** | Optional pooling strategies (FL uses `attn`; CL/LL use `mean`) |
+| `BidirectionalCrossAttentionTransformerEncoder` | ❌ Experimental | Bidirectional dual-layer cross-attention (in code but not used) |
+| `ElementWiseFusionEncoder` | ❌ Experimental | Element-wise fusion variants (in code but not used) |
+| `MyTransformerEncoder` | ❌ Experimental | Single-modal transformer (for ablation, not used in final experiments) |
 
 ---
 
@@ -276,9 +294,9 @@ local_loaders = get_local_dataloaders_cv(
 If you find this work useful in your research, please cite:
 
 ```bibtex
-@inproceedings{作者名等,
+@inproceedings{Wei2026FALAD,
   title     = {{Breaking Data Efficiency Dilemma: A Federated and Augmented Learning Framework for Alzheimer's Disease Detection Via Speech}},
-  author    = {Names},
+  author    = {Xiao Wei and Bin Wen and Yuqin Lin and Kai Li and Mingyang Gu and Xiaobao Wang and Longbiao Wang and Jianwu Dang},
   booktitle = {IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
   year      = {2026},
   doi       = {10.1109/ICASSP55912.2026.11463930}

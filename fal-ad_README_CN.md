@@ -26,14 +26,32 @@
 
 ## 🏗️ 模型架构
 
-### 音频 Backbone
-- **ResNet Audio Encoder**：基于 ResNet 的 CNN，从 Mel 频谱图中提取特征，生成音频嵌入向量
+### 多模态编码器
 
-### 多模态融合
-- **Cross-Attention Encoder**：单向交叉注意力，音频 → 文本方向（以 EGEMAPS 声学特征作为文本代理）
-- **Gated Cross-Attention Fusion**：带门控机制的交叉注意力，控制跨模态信息流动
-- **Element-Wise Fusion**：逐元素加权融合，配有可学习门控
-- **Bidirectional Cross-Attention Transformer**：全双向交叉注意力，充分建模双模态交互
+框架通过双编码器架构联合编码语音和文本：
+
+| 模态 | Backbone | 说明 |
+|------|----------|------|
+| **文本** | DistilBERT | 预训练 `distilbert-base-uncased` Transformer 编码器 |
+| **音频** | wav2vec 2.0 | 预训练 `facebook/wav2vec2-base` —— 原始波形 → 768 维上下文嵌入 |
+
+Mel 频谱图（开启 `pauses: True` 时附加停顿时长特征）直接送入 wav2vec 2.0 作为前端特征提取器，无需手工设计声学特征。
+
+### 交叉注意力融合模块
+
+核心融合模块是 **`GatedCrossAttentionFusion`**，集成在 `CrossAttentionTransformerEncoder` 中：
+
+1. **Pre-Norm 交叉注意力** — 音频作为 query，查询文本的 key/value 池（单向，audio → text），使音频表征有选择地关注语言相关区域
+2. **门控残差连接** — 可学习门控（`σ(W·[x; attn(x)]))`) 调制跨模态信息流量，防止注意力噪声主导
+3. **前馈 MLP** — 标准 FFN + ReLU 激活
+
+```
+Audio (query) ──► Cross-Attention ◄── Text (key/value)
+                          │
+                    gated residual ← GatedCrossAttentionFusion
+                          │
+                    Feed-Forward MLP
+```
 
 ### 联邦学习
 - 基于 **Flower**（`flwr`）构建联邦编排
@@ -47,7 +65,7 @@
 ```
 fal-ad/
 ├── main.py         # 主入口 — 支持 cl / ll / fl 三种模式
-├── model.py        # 模型定义（ResNet、Cross-Attention、融合模块）
+├── model.py        # 模型定义（GatedCrossAttentionFusion、CrossAttentionTransformerEncoder、池化层）
 ├── server.py       # Flower 服务器 — 策略选择与指标记录
 ├── client.py       # Flower 客户端 — 本地训练与评估
 ├── dataset.py      # ADReSSo21 数据集加载，支持 CV 和联邦划分
@@ -171,16 +189,16 @@ YAML 配置文件中关键参数说明：
 
 ## 🧠 模型变体
 
-框架实现了**多种融合策略**，可通过配置选择：
+代码中包含多个实验性融合模块，但**论文实际采用的是 `CrossAttentionTransformerEncoder`（含 `GatedCrossAttentionFusion`）**：
 
-| 模型类 | 说明 | 适用场景 |
-|--------|------|----------|
-| `CrossAttentionTransformerEncoder` | 单向音频→文本交叉注意力 | 非对称融合需求 |
-| `BidirectionalCrossAttentionTransformerEncoder` | 双向交叉注意力 | 充分建模双模态交互 |
-| `ElementWiseFusionEncoder` | 逐元素门控融合 | 内存受限场景 |
-| `GatedCrossAttentionFusion` | 带残差连接的门控交叉注意力 | 受控信息流动场景 |
-
-所有模型共享相同的 ResNet 音频 backbone，并提供统一的 Transformer 编码器接口。
+| 模型类 | 状态 | 说明 |
+|--------|------|------|
+| `CrossAttentionTransformerEncoder` | ✅ **论文使用** | 单向交叉注意力 + 门控残差（audio → text） |
+| `GatedCrossAttentionFusion` | ✅ **论文使用** | 论文中使用的门控交叉注意力层 |
+| `AttnPooling` / `GatedAttnPooling` | ✅ **论文使用** | 可选池化策略（FL 用 `attn`，CL/LL 用 `mean`） |
+| `BidirectionalCrossAttentionTransformerEncoder` | ❌ 实验性代码 | 双向双层交叉注意力（代码中有但未使用） |
+| `ElementWiseFusionEncoder` | ❌ 实验性代码 | 逐元素融合变体（代码中有但未使用） |
+| `MyTransformerEncoder` | ❌ 实验性代码 | 单模态 Transformer（用于消融，论文最终方案未采用） |
 
 ---
 
@@ -274,9 +292,9 @@ local_loaders = get_local_dataloaders_cv(
 如果本工作对您的研究有帮助，请引用：
 
 ```bibtex
-@inproceedings{作者名等,
+@inproceedings{Wei2026FALAD,
   title     = {{Breaking Data Efficiency Dilemma: A Federated and Augmented Learning Framework for Alzheimer's Disease Detection Via Speech}},
-  author    = {Names},
+  author    = {Xiao Wei and Bin Wen and Yuqin Lin and Kai Li and Mingyang Gu and Xiaobao Wang and Longbiao Wang and Jianwu Dang},
   booktitle = {IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
   year      = {2026},
   doi       = {10.1109/ICASSP55912.2026.11463930}
