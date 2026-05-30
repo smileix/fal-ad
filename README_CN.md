@@ -292,10 +292,11 @@ local_loaders = get_local_dataloaders_cv(
 如果本工作对您的研究有帮助，请引用：
 
 ```bibtex
-@inproceedings{Wei2026FALAD,
+@inproceedings{Wei2026,
+  author    = {Wei X and Wen B and Lin Y and Li K and Gu M and Wang X and Wang L and Dang J},
   title     = {{Breaking Data Efficiency Dilemma: A Federated and Augmented Learning Framework for Alzheimer's Disease Detection Via Speech}},
-  author    = {Xiao Wei and Bin Wen and Yuqin Lin and Kai Li and Mingyang Gu and Xiaobao Wang and Longbiao Wang and Jianwu Dang},
-  booktitle = {IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  booktitle = {ICASSP 2026-2026 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  pages     = {19147--19151},
   year      = {2026},
   doi       = {10.1109/ICASSP55912.2026.11463930}
 }
