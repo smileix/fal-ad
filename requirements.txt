@@ -1,0 +1,11 @@
+# fal-ad 项目 pip 补充依赖（精确版本，源于 pip freeze）
+#
+# 使用方式：
+#   conda env create -f environment.yml
+#   pip install -r requirements.txt
+#
+# 仅以下 3 个包需要 pip 安装，其余已由 conda environment.yml 处理
+
+transformers==4.48.0
+librosa==0.10.0
+soundfile==0.13.1

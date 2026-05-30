@@ -1,0 +1,31 @@
+# fal-ad conda 环境配置文件（精确版本，2026-05-31）
+# 来源：原始 yml + pip freeze 版本对齐，剔除未使用包
+#
+# 创建/更新环境：
+#   conda env create -f environment.yml
+#   pip install -r requirements.txt   # 仅 3 个 pip 补充包
+#
+# 注意：torch / torchvision / torchaudio 须通过 conda 安装以附带 CUDA 支持
+#       pip 不带 CUDA 编译版，混用会导致 torch.cuda.is_available() 失效
+
+name: fl
+channels:
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
+  - defaults
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+dependencies:
+  - python=3.9
+  - pytorch-cuda=12.1
+  - torchaudio=2.1.1
+  - torchvision=0.16.1
+  - numpy=1.23.5
+  - pandas=2.2.3
+  - flwr=1.7.0
+  - wandb=0.21.0
+  - scipy=1.13.1
+  - scikit-learn=1.6.1
+  - pyyaml=6.0.3
