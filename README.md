@@ -28,30 +28,28 @@ The framework supports **three learning paradigms**:
 
 ### Multimodal Encoder
 
-The framework jointly encodes speech and text through a dual-encoder architecture:
+The paper uses a dual-encoder design that keeps speech and text as sequences until the fusion stage:
 
-| Modality | Backbone | Details |
-|----------|----------|---------|
-| **Text** | DistilBERT | Pre-trained `distilbert-base-uncased` Transformer encoder |
-| **Audio** | wav2vec 2.0 | Pre-trained `facebook/wav2vec2-base` — raw waveform → contextualized 768-dim embeddings |
+| Modality | Backbone | Output |
+|----------|----------|--------|
+| **Text** | DistilBERT | Contextual token embeddings from `distilbert-base-uncased` |
+| **Audio** | wav2vec 2.0 | Contextual frame-level embeddings from `facebook/wav2vec2-base` |
 
-The Mel spectrogram (with pause features when `pauses: True`) is fed directly into wav2vec 2.0 as the frontend feature extractor; no hand-crafted feature engineering is applied.
+The implementation also keeps a Mel / EGEMAPS front-end branch for some ablations, but the paper configuration centers on sequence-level fusion between audio and text features rather than early concatenation.
 
 ### Cross-Attention Fusion Module
 
-The core fusion module is **`GatedCrossAttentionFusion`**, integrated inside `CrossAttentionTransformerEncoder`:
+The core fusion block is **`GatedCrossAttentionFusion`**, stacked inside `CrossAttentionTransformerEncoder` for multiple layers:
 
-1. **Pre-Norm Cross-Attention** — Audio queries the text key-value bank (unidirectional, audio → text), enabling the audio representation to selectively attend to linguistically relevant regions
-2. **Gated Residual Connection** — A learnable gate (`σ(W·[x; attn(x)]))`) modulates how much cross-modal information flows into the residual, preventing attention noise from dominating
-3. **Feed-Forward MLP** — Standard post-norm FFN with ReLU activation
+1. **Pre-norm cross-attention** — Both source and memory are normalized before attention, which stabilizes optimization in deeper stacks.
+2. **Unidirectional fusion** — Audio features query the text memory bank (`audio → text`), allowing speech representations to selectively attend to linguistically relevant tokens.
+3. **Gated residual connection** — The attention output is concatenated with the original source representation and passed through a sigmoid gate, controlling how much cross-modal signal enters the residual path.
+4. **Feed-forward refinement** — A position-wise MLP with ReLU and dropout further transforms the fused sequence.
 
-```
-Audio (query) ──► Cross-Attention ◄── Text (key/value)
-                          │
-                    gated residual ← GatedCrossAttentionFusion
-                          │
-                    Feed-Forward ML
-```
+
+### Pooling and Classifier
+
+After fusion, the sequence is reduced by one of three strategies: `mean`, `cls`, or `attn` / `gatedattn`. The final classifier is a LayerNorm + Dropout + MLP head that predicts the two classes (AD / HC). In the shipped configs, CL/LL use `mean` pooling, while FL uses `attn` pooling.
 
 ### Federated Learning
 - Built on **Flower** (`flwr`) for robust federated orchestration
@@ -131,30 +129,26 @@ The project uses the **ADReSSo21** (Alzheimer's Dementia Recognition through Spo
 
 > ⚠️ **ADReSSo21 requires a data access agreement.** Please visit the official ADReSSo challenge page to request access.
 
-### Dataset Structure Expected
+## Dataset Structure Expected
 
+This project expects the following two directory structures.
+
+### Official ADReSSo21 dataset
+```text
+ADReSSo21/diagnosis/train/
+├── audio/
+│   ├── ad/        # Alzheimer's patients audio
+│   └── cn/        # Healthy controls audio
 ```
-adresso21/
-├── train/
-│   ├── AD/          # Alzheimer's patients — training set
-│   └── HC/          # Healthy controls — training set
-├── test/
-│   ├── AD/
-│   └── HC/
-└── adresso21_train.csv   # Metadata with audio paths and labels
+
+### Locally augmented dataset
+```text
+ADReSSo21/diagnosis/train_aug/
+├── audio/
+│   ├── ad/        # Augmented Alzheimer's patients audio
+│   └── cn/        # Augmented healthy controls audio
 ```
 
-### CSV Format
-
-The `adresso21_train.csv` should contain at minimum:
-
-| Column | Description |
-|--------|-------------|
-| `file_path` | Relative path to audio file |
-| `label` | `AD` or `HC` |
-| `client_id` | Integer client ID for FL partitioning |
-
----
 
 ## 🚀 Quick Start
 
@@ -179,16 +173,8 @@ python main.py --mode ll --config configs/ll_config.yaml
 Start the Flower server and client(s):
 
 ```bash
-# Terminal 1 — Start server
 python main.py --mode fl --config configs/fl_server.yaml
-
-# Terminal 2+ — Start clients (one per terminal)
-python main.py --mode fl --config configs/fl_client.yaml --client_id 0
-python main.py --mode fl --config configs/fl_client.yaml --client_id 1
-python main.py --mode fl --config configs/fl_client.yaml --client_id 2
 ```
-
-> Use `--save_model True` to save the global model after FL training.
 
 ---
 
@@ -214,103 +200,29 @@ Key configuration parameters in YAML config files:
 
 ## 🧠 Model Variants
 
-The code contains several experimental fusion modules, but the **paper uses `CrossAttentionTransformerEncoder`** with `GatedCrossAttentionFusion` throughout:
+The code also keeps several ablation-ready encoders, but the **paper setting** is `CrossAttentionTransformerEncoder` with `GatedCrossAttentionFusion`:
 
-| Model Class | Status | Description |
-|-------------|--------|-------------|
-| `CrossAttentionTransformerEncoder` | ✅ **Paper** | Unidirectional cross-attention + gated residual (audio → text) |
-| `GatedCrossAttentionFusion` | ✅ **Paper** | Gated cross-attention layer used inside above |
-| `AttnPooling` / `GatedAttnPooling` | ✅ **Paper** | Optional pooling strategies (FL uses `attn`; CL/LL use `mean`) |
-| `BidirectionalCrossAttentionTransformerEncoder` | ❌ Experimental | Bidirectional dual-layer cross-attention (in code but not used) |
-| `ElementWiseFusionEncoder` | ❌ Experimental | Element-wise fusion variants (in code but not used) |
-| `MyTransformerEncoder` | ❌ Experimental | Single-modal transformer (for ablation, not used in final experiments) |
+| Model Class | Role | Notes |
+|-------------|------|-------|
+| `CrossAttentionTransformerEncoder` | ✅ **Paper** | Main sequence fusion encoder used for AD detection |
+| `GatedCrossAttentionFusion` | ✅ **Paper** | Pre-norm audio→text cross-attention with gated residual update |
+| `AttnPooling` / `GatedAttnPooling` | ✅ **Paper** | Sequence pooling heads; FL uses `attn`, CL/LL use `mean` |
+| `MyTransformerEncoder` | ❌ Experimental | Single-modal baseline for audio or text only |
 
 ---
 
 ## 📈 Federated Learning Workflow
 
-```
-┌─────────┐    parameters     ┌─────────┐    parameters     ┌─────────┐
-│ Client 0│◄─────────────────►│ Server  │◄─────────────────►│ Client 1│
-└─────────┘    flwr (gRPC)    │ (Flower)│    flwr (gRPC)    └─────────┘
-     │              ▲              │              ▲
-     │              │              │              │
-     ▼              │              ▼              │
- local train        │         aggregate           │
-     │              │              │              │
-     ▼              │              ▼              ▼
- parameters ───────┘         global model    local train
-                                               │
-                                      parameters ───────┘
-```
+Federated training follows a standard server-client loop:
 
-Each FL round:
-1. Server sends global model parameters to selected clients
-2. Each client performs local training on their private data
-3. Clients send updated parameters back to server
-4. Server aggregates parameters (FedAvg by default)
-5. Repeat for `num_rounds` iterations
+1. The server initializes the global model and broadcasts its parameters to the selected clients.
+2. Each client trains locally on its own private data.
+3. Clients return updated parameters together with local metrics such as loss, accuracy, and F1.
+4. The server aggregates the updates using the configured strategy (`FedAvg`, `FedAdam`, `FedAdagrad`, `FedYogi`, or `FedProx`).
+5. The updated global model is sent back to the clients and the next round begins.
 
----
+> In this repository's `main.py` runner, the Flower server is started first, then the client processes are launched after a short delay for each cross-validation fold.
 
-## 📊 Results
-
-After training, the framework logs:
-
-- **Loss curves** via W&B (wandb)
-- **Accuracy, Precision, Recall, F1, AUC** per round
-- **Confusion matrix** on test set
-- **Per-client metrics** in federated mode
-
-Example output during FL training:
-
-```
-Round 10 | Accuracy: 0.823 | F1: 0.815 | AUC: 0.891
-Round 20 | Accuracy: 0.847 | F1: 0.839 | AUC: 0.912
-Round 30 | Accuracy: 0.861 | F1: 0.854 | AUC: 0.928
-```
-
----
-
-## 🔧 Utilities
-
-### Model Statistics
-
-```bash
-python stats.py --model_path ./checkpoints/best_model.pt
-```
-
-Outputs total parameters, trainable parameters, and model size in MB.
-
-### Cross-Validation
-
-```python
-from dataset import get_dataloaders
-
-train_loader, val_loader, test_loader = get_dataloaders(
-    data_dir="adresso21",
-    csv_path="adresso21_train.csv",
-    batch_size=16,
-    cv_folds=5,
-    fold=0  # Use fold 0 as validation
-)
-```
-
-### Federated Local Dataloaders
-
-```python
-from dataset import get_local_dataloaders_cv
-
-local_loaders = get_local_dataloaders_cv(
-    data_dir="adresso21",
-    csv_path="adresso21_train.csv",
-    batch_size=16,
-    n_clients=3,
-    cv_folds=5,
-    fold=0
-)
-# local_loaders[client_id] → DataLoader for that client's data
-```
 
 ---
 
