@@ -76,50 +76,50 @@ fal-ad/
 
 ## ⚙️ Requirements
 
-环境采用 **Conda + pip 混合**方式安装。PyTorch/CUDA 类包必须通过 conda，以确保 CUDA 编译正确；其余包用 pip 安装（librosa/soundfile 等音频库 pip 版本更稳定）。
+The environment is installed with a mixed **Conda + pip** workflow. PyTorch/CUDA packages must be installed through conda to ensure CUDA builds correctly; the remaining packages are installed with pip (audio libraries such as librosa and soundfile tend to be more stable via pip).
 
-### Conda 环境（推荐）
+### Conda Environment (Recommended)
 
 ```bash
 conda env create -f environment.yml
 conda activate fl
 ```
 
-> `environment.yml` 中已固定全部版本号，可完全复现本项目的运行环境。
+> All versions are pinned in `environment.yml`, so the runtime environment can be reproduced exactly.
 
-### pip 补充包（仅 3 个）
+### Supplemental pip Packages (3 Total)
 
 ```bash
 pip install transformers==4.48.0 librosa==0.10.0 soundfile==0.13.1
 ```
 
-> ⚠️ **不要跳过 conda 环境单独用 pip 安装 torch**，pip 版本的 torch 不含 CUDA 驱动，会导致 `torch.cuda.is_available()` 返回 `False`。
+> ⚠️ **Do not install torch with pip outside the conda environment**. The pip build of torch does not include CUDA drivers, which will cause `torch.cuda.is_available()` to return `False`.
 
-### 完整依赖版本对照表
+### Complete Dependency Version Table
 
-**通过 conda 安装：**
+**Installed with conda:**
 
-| 包 | 版本 | 说明 |
+| Package | Version | Description |
 |----|------|------|
 | python | 3.9 | |
-| pytorch-cuda | 12.1 | 含 CUDA 12.1 编译版 PyTorch |
+| pytorch-cuda | 12.1 | PyTorch build compiled with CUDA 12.1 |
 | torchaudio | 2.1.1 | |
 | torchvision | 0.16.1 | |
 | numpy | 1.23.5 | |
 | pandas | 2.2.3 | |
-| flwr | 1.7.0 | Flower 联邦学习框架 |
-| wandb | 0.21.0 | Weights & Biases 日志 |
+| flwr | 1.7.0 | Flower federated learning framework |
+| wandb | 0.21.0 | Weights & Biases logging |
 | scipy | 1.13.1 | |
 | scikit-learn | 1.6.1 | |
 | pyyaml | 6.0.3 | |
 
-**通过 pip 安装（conda 环境激活后执行）：**
+**Installed with pip (after activating the conda environment):**
 
-| 包 | 版本 | 说明 |
+| Package | Version | Description |
 |----|------|------|
-| transformers | 4.48.0 | DistilBERT / wav2vec2 模型 |
-| librosa | 0.10.0 | 音频处理 |
-| soundfile | 0.13.1 | 音频文件读写 |
+| transformers | 4.48.0 | DistilBERT / wav2vec2 models |
+| librosa | 0.10.0 | Audio processing |
+| soundfile | 0.13.1 | Audio file I/O |
 
 ---
 

@@ -4,7 +4,7 @@
 
 论文采用双编码器结构，在融合阶段之前一直保留语音和文本的序列表示：
 
-| 模态 | Backbone | 输出 |
+| 模态 | 骨干模型 | 输出 |
 |------|----------|------|
 | **文本** | DistilBERT | 来自 `distilbert-base-uncased` 的上下文 token 表示 |
 | **音频** | wav2vec 2.0 | 来自 `facebook/wav2vec2-base` 的帧级上下文表示 |
@@ -133,10 +133,16 @@ ADReSSo21/diagnosis/train_aug/
 │   ├── ad/        # 扩增后的阿尔茨海默症患者音频
 │   └── cn/        # 扩增后的健康对照组音频
 ```
-```
 
+## 📝 引用
 
--2026 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+如果您在研究中使用了本工作，请引用：
+
+```bibtex
+@inproceedings{Wei2026,
+  author    = {Wei X and Wen B and Lin Y and Li K and Gu M and Wang X and Wang L and Dang J},
+  title     = {{Breaking Data Efficiency Dilemma: A Federated and Augmented Learning Framework for Alzheimer's Disease Detection Via Speech}},
+  booktitle = {ICASSP 2026-2026 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
   pages     = {19147--19151},
   year      = {2026},
   doi       = {10.1109/ICASSP55912.2026.11463930}
