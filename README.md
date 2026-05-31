@@ -24,6 +24,23 @@ The framework supports **three learning paradigms**:
 
 ---
 
+## 📊 Results
+
+The table below summarizes the reported performance on ADReSSo. It includes previous centralized methods and our implementations under Centralized Learning (CL), Local Learning (LL), and Federated Learning (FL), with and without augmentation (Aug). CL is the strict reproduction version of CogniAlign using its source code.
+
+| Modality | Metric | C-Attn | Ying | Bang | CogniAlign | CL | CL+Aug | LL | LL+Aug | FL | FL+Aug |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| Audio | Acc | 75.30 | 71.20 | 69.01 | <u>80.12</u> | 74.55 | <u>79.39</u> | <u>68.69</u> | 68.08 | 83.84 | <b><u>85.05</u></b> |
+| Audio | F1 | 76.00 | 73.10 | 70.39 | <u>79.46</u> | 73.39 | <u>79.14</u> | 65.68 | <u>67.10</u> | 83.67 | <b><u>84.64</u></b> |
+| Text | Acc | 73.50 | 78.90 | 83.10 | <u>86.77</u> | 84.85 | <u>86.67</u> | 78.39 | <u>79.80</u> | 87.68 | <b><u>90.30</u></b> |
+| Text | F1 | 73.50 | 79.00 | 83.10 | <u>86.59</u> | 84.69 | <u>86.63</u> | 77.48 | <u>79.55</u> | 87.64 | <b><u>90.28</u></b> |
+| Both | Acc | 77.20 | 83.70 | 87.32 | <u>90.36</u> | 86.06 | <u>86.67</u> | 78.59 | <u>80.61</u> | 89.70 | <b><u>91.52</u></b> |
+| Both | F1 | 77.60 | 83.30 | 87.25 | <u>90.11</u> | 85.89 | <u>86.64</u> | 77.16 | <u>80.35</u> | 89.65 | <b><u>91.45</u></b> |
+
+The underline marks the best value within each comparison group, and bold marks the global best value.
+
+---
+
 ## 🏗️ Architecture
 
 ### Multimodal Encoder
