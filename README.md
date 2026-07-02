@@ -169,28 +169,48 @@ ADReSSo21/diagnosis/train_aug/
 
 ## 🚀 Quick Start
 
-### 1. Centralized Learning (`cl`)
+### 1. Preprocessing
 
-Train with all data pooled on a single node:
+If the Whisper transcripts and `.pt` feature files are already provided, this step can be skipped. To regenerate them, first run ASR transcription and then extract DistilBERT / wav2vec2 embeddings:
 
 ```bash
-python main.py --mode cl --config configs/cl_config.yaml
+python preprocess/preprocesswhisper.py
+python preprocess/preprocessembeddings.py
 ```
 
-### 2. Local Learning (`ll`)
-
-Each client trains independently on its local data only:
+For the augmented training set, use the corresponding augmented preprocessing scripts:
 
 ```bash
-python main.py --mode ll --config configs/ll_config.yaml
+python preprocess/preprocesswhisper_aug.py
+python preprocess/preprocessembeddings_aug.py
 ```
 
-### 3. Federated Learning (`fl`)
+### 2. Main Experiments
 
-Start the Flower server and client(s):
+The paper reports Centralized Learning (CL), Local Learning (LL), and Federated Learning (FL) under audio-only, text-only, and fusion settings. The main fusion experiments can be launched with:
 
 ```bash
-python main.py --mode fl --config configs/fl_server.yaml
+python main.py --config configs/experiments/cl_fusion_aug.yaml
+python main.py --config configs/experiments/ll_fusion_aug.yaml
+python main.py --config configs/experiments/fl_fusion_aug.yaml
+```
+
+All experiment configs are under `configs/experiments/` and follow the naming pattern:
+
+```text
+<paradigm>_<modality>[_aug].yaml
+```
+
+Examples include `cl_audio.yaml`, `ll_text_aug.yaml`, and `fl_fusion_aug.yaml`.
+
+### 3. Ablation Examples
+
+Run audio-only, text-only, or no-augmentation variants by switching the config path:
+
+```bash
+python main.py --config configs/experiments/fl_audio_aug.yaml
+python main.py --config configs/experiments/fl_text_aug.yaml
+python main.py --config configs/experiments/fl_fusion.yaml
 ```
 
 ---

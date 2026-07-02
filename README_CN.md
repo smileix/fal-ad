@@ -15,25 +15,6 @@
 
 下划线表示该组中的最优值，粗体表示全局最优值。
 
-### 实验配置文件
-
-论文表中的 6 组实验（CL、CL+Aug、LL、LL+Aug、FL、FL+Aug）和 3 种模态（音频、文本、融合）均提供了独立配置文件，位于 `configs/experiments/`：
-
-| 实验 | 音频 | 文本 | 融合 |
-|------|------|------|------|
-| CL | `cl_audio.yaml` | `cl_text.yaml` | `cl_fusion.yaml` |
-| CL+Aug | `cl_audio_aug.yaml` | `cl_text_aug.yaml` | `cl_fusion_aug.yaml` |
-| LL | `ll_audio.yaml` | `ll_text.yaml` | `ll_fusion.yaml` |
-| LL+Aug | `ll_audio_aug.yaml` | `ll_text_aug.yaml` | `ll_fusion_aug.yaml` |
-| FL | `fl_audio.yaml` | `fl_text.yaml` | `fl_fusion.yaml` |
-| FL+Aug | `fl_audio_aug.yaml` | `fl_text_aug.yaml` | `fl_fusion_aug.yaml` |
-
-运行方式如下：
-
-```bash
-python main.py --config configs/experiments/fl_fusion_aug.yaml
-```
-
 ### 多模态编码器
 
 论文采用双编码器结构，在融合阶段之前一直保留语音和文本的序列表示：
@@ -87,6 +68,25 @@ fal-ad/
 ├── utils.py        # 训练工具函数：train()、evaluation()、配置管理等
 ├── stats.py        # 模型统计轻量脚本
 └── configs/        # YAML 配置文件（每种模式对应一个）
+```
+
+### 实验配置文件
+
+论文表中的 6 组实验（CL、CL+Aug、LL、LL+Aug、FL、FL+Aug）和 3 种模态（音频、文本、融合）均提供了独立配置文件，位于 `configs/experiments/`：
+
+| 实验 | 音频 | 文本 | 融合 |
+|------|------|------|------|
+| CL | `cl_audio.yaml` | `cl_text.yaml` | `cl_fusion.yaml` |
+| CL+Aug | `cl_audio_aug.yaml` | `cl_text_aug.yaml` | `cl_fusion_aug.yaml` |
+| LL | `ll_audio.yaml` | `ll_text.yaml` | `ll_fusion.yaml` |
+| LL+Aug | `ll_audio_aug.yaml` | `ll_text_aug.yaml` | `ll_fusion_aug.yaml` |
+| FL | `fl_audio.yaml` | `fl_text.yaml` | `fl_fusion.yaml` |
+| FL+Aug | `fl_audio_aug.yaml` | `fl_text_aug.yaml` | `fl_fusion_aug.yaml` |
+
+运行方式如下：
+
+```bash
+python main.py --config configs/experiments/fl_fusion_aug.yaml
 ```
 
 ---
@@ -166,6 +166,52 @@ ADReSSo21/diagnosis/train_aug/
 ├── audio/
 │   ├── ad/        # 扩增后的阿尔茨海默症患者音频
 │   └── cn/        # 扩增后的健康对照组音频
+```
+
+## 🚀 运行流程
+
+### 1. 预处理
+
+如果已经提供 Whisper 转录结果和 `.pt` 特征文件，可以跳过本步骤。需要重新生成时，先执行 ASR 转录，再提取 DistilBERT / wav2vec2 特征：
+
+```bash
+python preprocess/preprocesswhisper.py
+python preprocess/preprocessembeddings.py
+```
+
+增广训练集使用对应的增广预处理脚本：
+
+```bash
+python preprocess/preprocesswhisper_aug.py
+python preprocess/preprocessembeddings_aug.py
+```
+
+### 2. 主实验
+
+论文主表中的 CL、LL、FL 融合增强实验可直接运行：
+
+```bash
+python main.py --config configs/experiments/cl_fusion_aug.yaml
+python main.py --config configs/experiments/ll_fusion_aug.yaml
+python main.py --config configs/experiments/fl_fusion_aug.yaml
+```
+
+所有主实验配置均位于 `configs/experiments/`，命名规则为：
+
+```text
+<学习范式>_<模态>[_aug].yaml
+```
+
+例如 `cl_audio.yaml`、`ll_text_aug.yaml`、`fl_fusion_aug.yaml`。
+
+### 3. 消融实验示例
+
+音频单模态、文本单模态、去除增强等消融实验只需替换配置文件路径。例如：
+
+```bash
+python main.py --config configs/experiments/fl_audio_aug.yaml
+python main.py --config configs/experiments/fl_text_aug.yaml
+python main.py --config configs/experiments/fl_fusion.yaml
 ```
 
 ## 📝 引用

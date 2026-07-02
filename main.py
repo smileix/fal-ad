@@ -209,12 +209,31 @@ def fl_main(config_path, config, num_folds=5):
                 client_procs.append((proc, out_file))
                 print(f"Started client {cid} for fold {fold}.")
 
-            for proc, out_file in client_procs:
-                proc.wait()
+            failed_clients = []
+            while True:
+                for cid, (proc, _) in enumerate(client_procs):
+                    return_code = proc.poll()
+                    if return_code is not None and return_code != 0 and (cid, return_code) not in failed_clients:
+                        failed_clients.append((cid, return_code))
+                server_return_code = server_proc.poll()
+                if server_return_code is not None and server_return_code != 0:
+                    raise RuntimeError(f"Fold {fold} server failed early: rc={server_return_code}")
+                if failed_clients:
+                    raise RuntimeError(f"Fold {fold} client failed early: {failed_clients}")
+                if all(proc.poll() is not None for proc, _ in client_procs):
+                    break
+                time.sleep(5)
+
+            for _, out_file in client_procs:
                 out_file.close()
 
             server_log_file.close()
-            server_proc.wait()
+            server_return_code = server_proc.wait()
+            if server_return_code != 0 or failed_clients:
+                raise RuntimeError(
+                    f"Fold {fold} subprocess failed: server rc={server_return_code}, "
+                    f"client failures={failed_clients}"
+                )
 
         except KeyboardInterrupt:
             print(f"\n[Interrupted] Terminating all processes for fold {fold}...")

@@ -230,6 +230,12 @@ if __name__ == "__main__":
     config = load_config(args.config)
 
     logger = MetricsLogger()
+    num_clients = int(config.train.toDict().get('num_clients', 3))
+    client_requirements = {
+        "min_fit_clients": num_clients,
+        "min_evaluate_clients": num_clients,
+        "min_available_clients": num_clients,
+    }
     if config.train.learning_paradigm == 'fl':
         initial_model = get_model(config)
         initial_params = get_model_parameters(initial_model)
@@ -239,12 +245,14 @@ if __name__ == "__main__":
         if strategy_name == 'fedavg':
             strategy = fl.server.strategy.FedAvg(fit_metrics_aggregation_fn=logger.aggregate_fit,
                                                  evaluate_metrics_aggregation_fn=logger.aggregate_evaluate,
-                                                 # initial_parameters=initial_params,  # 添加必需的初始参数
+                                                 **client_requirements,
+                                                 initial_parameters=initial_params,
                                                  )
         elif strategy_name == 'fedadam':
             strategy = fl.server.strategy.FedAdam(fit_metrics_aggregation_fn=logger.aggregate_fit,
                                                   evaluate_metrics_aggregation_fn=logger.aggregate_evaluate,
                                                   initial_parameters=initial_params,  # 添加必需的初始参数
+                                                  **client_requirements,
                                                   eta=0.0002,  # 学习率参数名为 eta 而不是 learning_rate
                                                   beta_1=0.9,  # Adam 优化器的 beta_1
                                                   beta_2=0.99,  # Adam 优化器的 beta_2
@@ -253,23 +261,26 @@ if __name__ == "__main__":
         elif strategy_name == 'fedadagrad':
             strategy = fl.server.strategy.FedAdagrad(fit_metrics_aggregation_fn=logger.aggregate_fit,
                                                      evaluate_metrics_aggregation_fn=logger.aggregate_evaluate,
+                                                     **client_requirements,
                                                      eta=0.0005, tau=1e-5, initial_parameters=initial_params,  # 添加必需的初始参数
                                                      )
         elif strategy_name == 'fedyogi':
             strategy = fl.server.strategy.FedYogi(fit_metrics_aggregation_fn=logger.aggregate_fit,
                                                   initial_parameters=initial_params,  # 添加必需的初始参数
                                                   evaluate_metrics_aggregation_fn=logger.aggregate_evaluate, eta=0.0008,
+                                                  **client_requirements,
                                                   beta_1=0.9, beta_2=0.99, tau=1e-5)
         elif strategy_name == 'fedprox':
             strategy = fl.server.strategy.FedProx(fit_metrics_aggregation_fn=logger.aggregate_fit,
                                                   evaluate_metrics_aggregation_fn=logger.aggregate_evaluate,
                                                   initial_parameters=initial_params,  # 添加必需的初始参数
+                                                  **client_requirements,
                                                   proximal_mu=0.3# 控制正则项强度的超参数
                                                   )
         fl.server.start_server(server_address="localhost:8080", config=fl.server.ServerConfig(num_rounds=30),
                                strategy=strategy)
         logger.summary()
     else:
-        strategy = LocalTrainingStrategy(fit_metrics_aggregation_fn=logger.aggregate_fit)
+        strategy = LocalTrainingStrategy(fit_metrics_aggregation_fn=logger.aggregate_fit, **client_requirements)
         fl.server.start_server(server_address="localhost:8080", config=fl.server.ServerConfig(num_rounds=1),
                                strategy=strategy)  # 配置 FedAvg，并接入我们自定义的聚合指标函数
