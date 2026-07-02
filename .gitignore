@@ -1,0 +1,16 @@
+# Local Python environment and runtime artifacts
+.venv/
+__pycache__/
+*.py[cod]
+logs/
+wandb/
+*.pt
+* (1).csv
+*_bak.csv
+
+# Restricted ADReSSo21 source data; keep locally only.
+dataset/
+datasets/ADReSSo21/diagnosis/train/
+datasets/ADReSSo21/diagnosis/test-dist/
+datasets/ADReSSo21/diagnosis/text/
+datasets/ADReSSo21/task*.csv

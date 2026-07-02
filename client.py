@@ -96,6 +96,4 @@ if __name__ == "__main__":
     fl.client.start_client(
         server_address="localhost:8080",
         client=client.to_client(),
-        max_retries=5,
-        max_wait_time=120,
     )

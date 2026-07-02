@@ -10,7 +10,7 @@ train:
   cross_validation_folds: 5
   learning_paradigm: 'll'
   cvd: 5
-  augment: True
+  augment: False
 
 model:
   pooling: 'mean'
@@ -25,5 +25,6 @@ model:
   audio_model: 'wav2vec2'
   pauses: True
   fusion: 'gated_cross_attention'
+  single_modal: 'audio'
 
 model_name: ''

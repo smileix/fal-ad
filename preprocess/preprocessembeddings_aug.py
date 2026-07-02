@@ -1,6 +1,7 @@
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 import pandas as pd
 from transformers import AutoTokenizer, RobertaModel, Wav2Vec2Processor, Wav2Vec2Model, BertTokenizerFast, BertModel, DistilBertModel, AutoModel, DistilBertTokenizerFast, AutoModelForCausalLM
 import torch
@@ -76,9 +77,10 @@ name_mapping_audio = {
     'wavbert': 'wavbert',
 }
 audio_model_data = '_' + name_mapping_audio.get(audio_model, '')
-root_path = '../../dataset/ADReSSo21/diagnosis/train_aug/audio/'
-root_text_path = '../../dataset/ADReSSo21/diagnosis/train_aug/text/'
-textual_data = '../../dataset/ADReSSo21/diagnosis/train_aug/text_transcriptions_aug.csv'
+root = os.path.join(PROJECT_ROOT, 'datasets', 'ADReSSo21', 'diagnosis', 'train_aug')
+root_path = os.path.join(root, 'audio')
+root_text_path = os.path.join(root, 'text')
+textual_data = os.path.join(root, 'text_transcriptions_aug.csv')
 max_length = 200
 # todo 这里的max length替换成mini batch的做法, 这里的padding好像没有设置掩码矩阵，后续可以尝试改进下
 

@@ -8,27 +8,20 @@ train:
   cross_validation: True
   cross_validation_folds: 5
   learning_paradigm: 'cl'
-#  augment: True
+  augment: True
 
 model:
-  pooling: 'mean' # 'mean', 'cls'
-#  pooling: 'gatedattn'
+  pooling: 'mean'
   n_layers: 1
   dropout: 0.3
   hidden_size: 768
   intermediate_size: 3072
   n_heads: 12
-  # 是否可以使用提示学习，分类标签用label name
   num_classes: 1
   hidden_mlp_size: 256
   textual_model: 'distil'
-#  textual_model: 'bert'
   audio_model: 'wav2vec2'
   pauses: True
-#  pauses: False
   fusion: 'gated_cross_attention'
-#  single_modal: text
-#  single_modal: audio
-# model_name这个参数不用指定，在util中的save config方法，会自动拼接textual model与 audio model 以及是否停顿，来生成对应model name，并作为log的目录名称
-# 在这指定也没用，会被后续的操作覆盖
+
 model_name: ''

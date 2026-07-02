@@ -43,7 +43,11 @@ def save_config(config):
     config.model_name = f"{textual_data}{audio_data}{pauses_data}{config.model.fusion}"
     config.model.model_name = config.model_name
 
-    config.path_name = f"{config.model_name}_{config.model.pooling}"
+    single_modal = getattr(config.model, 'single_modal', '')
+    modality = single_modal if single_modal else 'fusion'
+    data_setting = 'aug' if getattr(config.train, 'augment', False) else 'base'
+    paradigm = getattr(config.train, 'learning_paradigm', 'run')
+    config.path_name = f"{paradigm}_{config.model_name}_{config.model.pooling}_{data_setting}_{modality}"
 
 
     # log_path = os.path.join('logs', config.path_name)

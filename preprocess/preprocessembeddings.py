@@ -17,6 +17,7 @@ from torch.cuda.amp import autocast
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 def process_egemaps_frame(frame_data):
     frame, sr = frame_data
@@ -76,11 +77,11 @@ name_mapping_audio = {
     'wavbert': 'wavbert',
 }
 audio_model_data = '_' + name_mapping_audio.get(audio_model, '')
-root = '../../dataset/ADReSSo21/diagnosis/train/'
-# root = '../../dataset/ADReSSo21/diagnosis/test-dist/'
+root = os.path.join(PROJECT_ROOT, 'datasets', 'ADReSSo21', 'diagnosis', 'train')
+# root = os.path.join(PROJECT_ROOT, 'datasets', 'ADReSSo21', 'diagnosis', 'test-dist')
 root_path = os.path.join(root, 'audio')
 root_text_path = os.path.join(root, 'text')
-textual_data = os.path.join(root,'text_transcriptions.csv')
+textual_data = os.path.join(root, 'text_transcriptions.csv')
 max_length = 200
 # todo 这里的max length替换成mini batch的做法
 

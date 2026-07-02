@@ -5,6 +5,8 @@ import torch
 import random
 import re
 
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
 def remove_non_english(text):
     return re.sub(r'[^a-zA-Z0-9\s.,!?\'"-]', '', text)
 
@@ -13,12 +15,13 @@ def remove_non_english(text):
 model = whisper.load_model("large-v3")
 # model = whisper.load_model("large-v3-turbo")
 
-root_path = '../../dataset/ADReSSo21/diagnosis/train/audio'
+root = os.path.join(PROJECT_ROOT, 'datasets', 'ADReSSo21', 'diagnosis', 'train')
+root_path = os.path.join(root, 'audio')
 diagnosis = ['ad', 'cn']
-textual_data = '../../dataset/ADReSSo21/diagnosis/train/text_transcriptions.csv'
+textual_data = os.path.join(root, 'text_transcriptions.csv')
 
-# textual_data = '../../dataset/ADReSSo21/diagnosis/train/text_transcriptions_large.csv'
-# textual_data = '../../dataset/ADReSSo21/diagnosis/train/text_transcriptions_large_turbo.csv'
+# textual_data = os.path.join(root, 'text_transcriptions_large.csv')
+# textual_data = os.path.join(root, 'text_transcriptions_large_turbo.csv')
 
 
 def preprocess_whisper():

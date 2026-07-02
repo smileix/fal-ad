@@ -12,8 +12,8 @@ from preprocess.preprocessembeddings import name_mapping_text, name_mapping_audi
 import json
 import random
 from collections import defaultdict
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-DATA_ROOT = os.path.join(PROJECT_ROOT, 'dataset', 'ADReSSo21', 'diagnosis', 'train')
+PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+DATA_ROOT = os.path.join(PROJECT_ROOT, 'datasets', 'ADReSSo21', 'diagnosis', 'train')
 splits_dir = os.path.join(DATA_ROOT, 'splits')
 
 
@@ -49,11 +49,11 @@ def smart_pt_load(base_path, must_contain=None):
 
 
 def read_CSV(config, augment=False):
-    DATA_ROOT = os.path.join(PROJECT_ROOT, 'dataset', 'ADReSSo21', 'diagnosis', 'train')
+    DATA_ROOT = os.path.join(PROJECT_ROOT, 'datasets', 'ADReSSo21', 'diagnosis', 'train')
     root_text_path = os.path.join(DATA_ROOT, 'text')
     csv_labels_path = os.path.join(DATA_ROOT, 'adresso-train-mmse-scores.csv')
     if augment:
-        DATA_ROOT = os.path.join(PROJECT_ROOT, 'dataset', 'ADReSSo21', 'diagnosis', 'train_aug')
+        DATA_ROOT = os.path.join(PROJECT_ROOT, 'datasets', 'ADReSSo21', 'diagnosis', 'train_aug')
         root_text_path = os.path.join(DATA_ROOT, 'text')
         csv_labels_path = os.path.join(DATA_ROOT, 'adresso-train-mmse-scores_aug.csv')
     labels_pd = pd.read_csv(csv_labels_path)

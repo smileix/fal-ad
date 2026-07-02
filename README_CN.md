@@ -15,6 +15,25 @@
 
 下划线表示该组中的最优值，粗体表示全局最优值。
 
+### 实验配置文件
+
+论文表中的 6 组实验（CL、CL+Aug、LL、LL+Aug、FL、FL+Aug）和 3 种模态（音频、文本、融合）均提供了独立配置文件，位于 `configs/experiments/`：
+
+| 实验 | 音频 | 文本 | 融合 |
+|------|------|------|------|
+| CL | `cl_audio.yaml` | `cl_text.yaml` | `cl_fusion.yaml` |
+| CL+Aug | `cl_audio_aug.yaml` | `cl_text_aug.yaml` | `cl_fusion_aug.yaml` |
+| LL | `ll_audio.yaml` | `ll_text.yaml` | `ll_fusion.yaml` |
+| LL+Aug | `ll_audio_aug.yaml` | `ll_text_aug.yaml` | `ll_fusion_aug.yaml` |
+| FL | `fl_audio.yaml` | `fl_text.yaml` | `fl_fusion.yaml` |
+| FL+Aug | `fl_audio_aug.yaml` | `fl_text_aug.yaml` | `fl_fusion_aug.yaml` |
+
+运行方式如下：
+
+```bash
+python main.py --config configs/experiments/fl_fusion_aug.yaml
+```
+
 ### 多模态编码器
 
 论文采用双编码器结构，在融合阶段之前一直保留语音和文本的序列表示：

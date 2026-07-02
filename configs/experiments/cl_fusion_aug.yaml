@@ -2,14 +2,12 @@ train:
   batch_size: 32
   num_epochs: 200
   learning_rate: 0.00002
-  weight_decay: 0.01
+  weight_decay: 0.1
   early_stopping: True
-  early_stopping_patience: 20
-  cross_validation: False
-  local_training: True
+  early_stopping_patience: 15
+  cross_validation: True
   cross_validation_folds: 5
-  learning_paradigm: 'll'
-  cvd: 5
+  learning_paradigm: 'cl'
   augment: True
 
 model:
@@ -25,5 +23,6 @@ model:
   audio_model: 'wav2vec2'
   pauses: True
   fusion: 'gated_cross_attention'
+  single_modal: ''
 
 model_name: ''

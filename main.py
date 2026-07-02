@@ -173,8 +173,8 @@ def fl_main(config_path, config, num_folds=5):
     # 参数可自定义
     NUM_CLIENTS = 3
     # 修改SERVER_CMD以包含日志参数
-    SERVER_CMD = ["python", "server.py", "--config", config_path]
-    CLIENT_CMD_TEMPLATE = ["python", "client.py", "--client_id", "{cid}", "--config", config_path, "--kfold_number", "{fold}"]
+    SERVER_CMD = [sys.executable, "server.py", "--config", config_path]
+    CLIENT_CMD_TEMPLATE = [sys.executable, "client.py", "--client_id", "{cid}", "--config", config_path, "--kfold_number", "{fold}"]
 
     base_log_path = config.log_path
     log_path_server = os.path.join(base_log_path, 'server')

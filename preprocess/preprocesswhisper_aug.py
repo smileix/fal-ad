@@ -7,6 +7,8 @@ import torch
 import re
 
 
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
 
 def reorganize_data_simple(source_dir, target_dir):
     Path(target_dir).mkdir(parents=True, exist_ok=True)
@@ -60,10 +62,11 @@ def remove_non_english(text):
 # todo 目前是将原始数据与增广数据混合按照标签放进指定目录了，不过为了避免重复编码，只需要将增广数据放进对应目录就行，原始数据还是用之前的处理。
 ## 因此，需要在完成whisper转录之后，删除第一序号与第二序号相同的样本的asr结果就行，之后再提取对应的音频特征
 def preprocess_whisper():
-    root_path = '../../dataset/ADReSSo21/diagnosis/train_aug/audio'
+    root = os.path.join(PROJECT_ROOT, 'datasets', 'ADReSSo21', 'diagnosis', 'train_aug')
+    root_path = os.path.join(root, 'audio')
     diagnosis = ['ad', 'cn']
     # 这个是asr转录出来的文本要保存的位置
-    textual_data = '../../dataset/ADReSSo21/diagnosis/train_aug/text_transcriptions.csv'
+    textual_data = os.path.join(root, 'text_transcriptions.csv')
 
     # todo 后续使用whisper large试试，以及后续尝试使用whisper X来提升对齐精度
     # model = whisper.load_model("small.en")
@@ -157,6 +160,6 @@ def preprocess_whisper():
 
 if __name__ == "__main__":
     source_directory = "/work/2024/wenbin/Dataset/ADReSSo_Seperate_reverse/enhanced"  # 修改为你的源数据目录
-    target_directory = "../../dataset/ADReSSo21/diagnosis/train_aug/audio"  # 修改为你的目标目录
+    target_directory = os.path.join(PROJECT_ROOT, 'datasets', 'ADReSSo21', 'diagnosis', 'train_aug', 'audio')
     reorganize_data_simple(source_directory, target_directory)
     # preprocess_whisper()
